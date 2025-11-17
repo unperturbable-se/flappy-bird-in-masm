@@ -1,15 +1,17 @@
 INCLUDE Irvine32.inc
 .data
 window byte 10000 dup(?)
+windowwidth equ 200
+windowheight equ 50
 .code
 ;--------------------------------------
 makeBackground proc
 lea esi,window
 mov eax,0 ;index
-mov ecx,100 ;for(int i=0;i<100;i++)
+mov ecx,windowheight ;for(int i=0;i<100;i++)
 OuterLoop:
      push ecx
-     mov ecx,100 ;for(int j=0;j<100;j++)
+     mov ecx,windowwidth ;for(int j=0;j<100;j++)
      innerLoop:
           mov byte ptr[esi+eax],'x'
           inc eax
@@ -22,10 +24,10 @@ makeBackground endp
 displayBackground proc
 lea esi,window
 mov eax,0 ;index
-mov ecx,100 ;for(int i=0;i<100;i++)
+mov ecx,windowheight ;for(int i=0;i<100;i++)
 OuterLoop:
      push ecx
-     mov ecx,100 ;for(int j=0;j<100;j++)
+     mov ecx,windowwidth ;for(int j=0;j<100;j++)
      innerLoop:
           push eax
           mov al,[esi+eax]
