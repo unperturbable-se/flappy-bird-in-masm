@@ -1,43 +1,28 @@
 INCLUDE Irvine32.inc
 .data
-window byte 10000 dup(?)
 windowwidth equ 200
-windowheight equ 50
+windowheight equ 100
+platformSpeed equ 10
+platformWidth equ 15
 .code
 ;--------------------------------------
-makeBackground proc
-mov eax,0 ;index
-mov ecx,windowheight ;for(int i=0;i<100;i++)
-OuterLoop:
-     push ecx
-     mov ecx,windowwidth ;for(int j=0;j<100;j++)
-     innerLoop:
-          mov byte ptr[esi+eax],'x'
-          inc eax
-          loop innerLoop
-     pop ecx
-     loop OuterLoop
-ret
-makeBackground endp
-;--------------------------------------
-displayBackground proc
-mov eax,0 ;index
-mov ecx,windowheight ;for(int i=0;i<100;i++)
-OuterLoop:
-     push ecx
-     mov ecx,windowwidth ;for(int j=0;j<100;j++)
-     innerLoop:
-          push eax
-          mov al,[esi+eax]
-          call writechar
-          pop eax
-          inc eax
-          loop innerLoop
-     pop ecx
-     call crlf
-     loop OuterLoop
-ret
-displayBackground endp
+    displayBackground proc ;runs only once
+    call clrscr 
+    mov dh,0
+    OuterLoop:
+        mov dl,0
+        innerLoop:
+            call gotoxy
+            mov al,'X'
+            call writechar
+            inc dl
+            cmp dl,windowwidth
+            jnz innerloop
+        inc dh
+        cmp dh,windowheight
+        jnz OuterLoop
+    ret
+    displayBackground endp
 ;--------------------------------------
 movePlatform proc ;K-T%K-->K is width
 push ax
@@ -47,39 +32,60 @@ div bx
 pop ax
 sub ax,dx
 movzx ebx,ax
+ret
 movePlatform endp
 ;--------------------------------------
-addplatform proc ;parameter ebx(x coordinate)
-mov eax,0 ;index
-mov ecx,windowheight ;for(int i=0;i<100;i++)
-OuterLoop:
-     push ecx
-     mov ecx,windowwidth ;for(int j=0;j<100;j++)
-     innerLoop:
-          cmp ecx,ebx ;if x is between [ebx,ebx+5]
-          jnae donothing
-          mov edx,ebx
-          add edx,5
-          cmp ecx,edx; 
-          jnbe donothing
-          mov byte ptr [esi+eax],' '
-          donothing:
-              inc eax
-              loop innerLoop
-     pop ecx
-     loop OuterLoop
+addplatform proc ;parameter dl(x coordinate)
+push ecx
+mov cl,0 
+outerLoop:
+    mov dh,0
+    innerLoop:
+         call gotoxy
+         mov al, '+'
+         call writechar
+         inc dh
+         cmp dh,windowheight
+         jnz innerLoop 
+    inc dl
+    inc cl
+    cmp cl,platformWidth
+    jnz outerLoop
+pop ecx
 ret
 addplatform endp
 ;--------------------------------------
+removeplatform proc ;parameter dl(x coordinate)
+push ecx
+mov cl,0 
+outerLoop:
+    mov dh,0
+    innerLoop:
+         call gotoxy
+         mov al, 'X'
+         call writechar
+         inc dh
+         cmp dh,windowheight
+         jnz innerLoop 
+    inc dl
+    inc cl
+    cmp cl,platformWidth
+    jnz outerLoop
+pop ecx
+ret
+removeplatform endp
+;--------------------------------------
 main proc
-lea esi,window
-call makeBackground
-;mov ax,cx
-;call movePlatform
-mov ebx,30
-call addplatform
 call displayBackground
-;call clrscr
+mov cl,windowwidth-platformWidth
+loop1:
+      mov dl,cl
+      call addplatform
+      mov dl,cl
+      call removeplatform
+      sub cl,platformSpeed
+      cmp cl,0
+      jnz loop1
 exit
 main endp
 ;----------------------------------------
