@@ -1,0 +1,8 @@
+.vscode/
+# Ignore build artifacts
+*.exe
+*.obj
+*.lnk
+
+# Ignore Windows batch scripts
+*.bat
