@@ -6,3 +6,5 @@
 
 # Ignore Windows batch scripts
 *.bat
+
+test.asm
