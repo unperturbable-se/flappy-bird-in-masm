@@ -1,10 +1,34 @@
 INCLUDE Irvine32.inc
 .data
-windowwidth equ 50
-windowheight equ 50
-platformSpeed equ 10
-platformWidth equ 4
-holeheight    equ windowheight/10
+windowwidth equ 125
+windowheight equ 100
+platformdelay equ 0
+platformWidth equ 5
+holeheight    equ 20
+birdposx      equ windowwidth/2
+birdposy      equ windowheight/2
+
+birdSprite BYTE\
+     0,0,1,1,0,0,0,0
+BYTE 0,1,1,1,1,0,0,0
+BYTE 1,1,1,1,1,1,0,0
+BYTE 1,1,1,1,1,1,1,0
+BYTE 1,1,1,1,1,1,0,0
+BYTE 1,1,0,1,1,0,0,0
+BYTE 0,1,0,0,1,0,0,0
+BYTE 0,0,0,0,0,0,0,0 
+
+airplane BYTE\
+     0,0,0,1,1,0,0,0
+BYTE 0,0,1,1,1,1,0,0
+BYTE 0,1,1,1,1,1,1,0
+BYTE 0,0,0,1,1,1,0,1
+BYTE 0,0,1,1,1,1,0,1
+BYTE 0,1,1,1,1,1,1,0
+BYTE 0,0,0,1,1,1,0,0
+BYTE 0,0,0,0,1,0,0,0
+
+
 .code
 ;--------------------------------------
     displayBackground proc ;runs only once
@@ -27,15 +51,22 @@ holeheight    equ windowheight/10
     ret
     displayBackground endp
 ;--------------------------------------
-movePlatform proc uses eax ;takes dl as input, 
+movePlatform proc uses eax ;takes dl as input, takes bh,bl as input(hole height is between bl,bh)
 ;adds speed number of columns, removes speed number of columns(future addition)
 mov  eax,green+(black*16)
 call SetTextColor
     mov dh,0
     addcolumn:
+         cmp dh,bl
+         jnge print
+         cmp dh,bh
+         jnle print
+         jmp dontprint
+         print:
          call gotoxy
          mov al, 219
          call writechar
+         dontprint:
          inc dh
          cmp dh,windowheight
          jnz addcolumn
@@ -59,7 +90,7 @@ call SetTextColor
 ret
 movePlatform endp
 ;--------------------------------------
-addplatform proc uses edx;parameter dl(x coordinate)
+addplatform proc uses edx;parameter dl(x coordinate), bl-bh is y-range of hole
 mov  eax,green+(black*16)
 call SetTextColor
 push ecx
@@ -67,9 +98,16 @@ mov cl,0
 outerLoop:
     mov dh,0
     innerLoop:
+         cmp dh,bl
+         jnge print
+         cmp dh,bh
+         jnle print
+         jmp dontprint
+         print:
          call gotoxy
          mov al, 219
          call writechar
+         dontprint:
          inc dh
          cmp dh,windowheight
          jnz innerLoop 
@@ -100,37 +138,7 @@ outerLoop:
 ret
 removeplatform endp
 ;--------------------------------------
-addHole proc uses edx ecx ;parameter: dl(x coordinate),bl(y coordinate)
-;range-> x(dl to dl+pwidth) y(bl to bl+hheight)
-mov dh,bl
-mov  eax,yellow+(black*16)
-call SetTextColor
-mov ecx,platformWidth
-    outerloop:
-    cmp dl,0
-    jle endloop
-    push ecx
-    mov dh,bl
-    mov  ecx,holeheight
-         innerloop:
-         call gotoxy
-         mov al,219
-         call writechar
-         inc dh
-         loop innerLoop
-    pop ecx
-    inc dl
-    cmp dl,windowwidth-1
-    jg endloop
-    jmp outerloop
-
-endloop:
-mov  eax,green+(black*16)
-call SetTextColor
-ret
-addHole endp
-;--------------------------------------
-randomizehole proc uses eax ;returns bl(windowheight*.25 to windowheight*.75)
+randomizehole proc uses eax ;returns bl(windowheight*.25 to windowheight*.75),bh(bl+holehight)
 mov eax,windowheight
 mov ebx,windowheight
 shr eax,1 ;0.5
@@ -138,8 +146,36 @@ shr ebx,2; 0.25
 call randomrange
 add eax,ebx ;rand(0 to 0.5)+0.25
 mov bl,al
+mov bh,bl
+add bh,holeheight
 ret
 randomizehole endp
+;--------------------------------------
+addbird proc uses edx ecx
+mov  eax,blue+(black*16)
+call SetTextColor
+lea esi,airplane
+mov ecx,0 ;index
+mov dh,birdposy
+outerloop:
+     mov dl,birdposx
+     innerloop:
+          cmp byte ptr [esi+ecx],1
+          jne endloop
+          call gotoxy
+          mov al,219
+          call writechar
+          endloop:
+          inc ecx
+          inc dl
+          cmp dl,birdposx+8
+          jne innerloop
+    inc dh
+    cmp dh,birdposy+8
+    jne outerloop
+
+ret
+addbird endp
 ;--------------------------------------
 main proc
 call displayBackground
@@ -147,11 +183,13 @@ outerloop:
     call randomizehole
     mov dl,windowwidth-platformWidth-1
     call addplatform
-    call addHole
+    ;call addHole
     mov dl,windowwidth-platformWidth-1
     loop1:
           call moveplatform
-          call addHole
+          call addbird
+          mov eax,platformdelay
+          call delay
           cmp dl,0
           jge loop1
     call removeplatform
