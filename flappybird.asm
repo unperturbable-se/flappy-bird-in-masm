@@ -1,15 +1,18 @@
 INCLUDE Irvine32.inc
 .data
-windowwidth equ 125
-windowheight equ 100
-platformdelay equ 0
-platformWidth equ 5
-holeheight    equ 25
+windowwidth equ 80
+windowheight equ 50
+platformdelay equ 10
+platformWidth equ 2
+holeheight    equ 15
 birdposx      equ windowwidth/2
 birdposy      byte windowheight/2
 maxbirdposy   byte windowheight/2+8
 time          dword 0
-jumpheight    equ 14
+score         dword 0
+jumpheight    equ 7
+continueGame  byte 1
+
 
 ;velocity      equ 1
 ;acceleration  equ 0
@@ -34,6 +37,31 @@ BYTE 0,1,1,1,1,1,1,0
 BYTE 0,0,0,1,1,1,0,0
 BYTE 0,0,0,0,1,0,0,0
 
+Gameovertext BYTE\
+     "  ____   ____  ___ ___    ___ "   
+BYTE " /    | /    ||   |   |  /  _]"   
+BYTE "|   __||  o  || _   _ | /  [_ "   
+BYTE "|  |  ||     ||  \_/  ||    _]"   
+BYTE "|  |_ ||  _  ||   |   ||   [_ "   
+BYTE "|     ||  |  ||   |   ||     |"   
+BYTE "|___,_||__|__||___|___||_____|"   
+BYTE "                              "   
+BYTE "  ___   __ __    ___  ____    "   
+BYTE " /   \ |  |  |  /  _]|    \   "   
+BYTE "|     ||  |  | /  [_ |  D  )  "   
+BYTE "|  O  ||  |  ||    _]|    /   "   
+BYTE "|     ||  :  ||   [_ |    \   "   
+BYTE "|     | \   / |     ||  .  \  "   
+BYTE " \___/   \_/  |_____||__|\_|  "   
+BYTE "                              "   
+BYTE "                              "   
+BYTE "                              "   
+BYTE " _____  _____  _____  _____   "   
+BYTE "|     ||     ||     ||     |  "   
+BYTE "|_____||_____||_____||_____|  "   
+BYTE "                              "   
+                                  
+                                
 
 .code
 ;--------------------------------------
@@ -240,8 +268,9 @@ getkey endp
 ;--------------------------------------
 falldown proc uses eax ;velocity=1/4*time
 mov eax,time
-shr eax,1
-jnc return
+and eax,00000001h
+cmp eax,00000001h
+jnz return
 call removebird
 inc birdposy
 inc maxbirdposy
@@ -262,15 +291,26 @@ check:
       cmp dl,birdposx
       je collided
 ret
-collided:exit
+collided:mov continueGame,0
 checkCollision endp
 ;--------------------------------------
-main proc
+showScore proc uses edx eax
+mov  eax,white+(black*16)
+call SetTextColor
+mov dh,0
+mov dl,windowwidth-10
+call gotoxy
+mov eax,score
+call writedec
+showScore endp
+;--------------------------------------
+game proc
 lea esi,airplane ;set character
 call displayBackground
 call addbird
 outerloop:
     call randomizehole
+    ;call showScore
     mov dl,windowwidth-platformWidth-1
     call addplatform
     mov dl,windowwidth-platformWidth-1
@@ -283,10 +323,44 @@ outerloop:
           call falldown
           call addbird
           call checkCollision
+          cmp continueGame,0
+          jz return
           cmp dl,0
           jge loop1
     call removeplatform
+    inc score
     jmp outerLoop
+
+return:ret
+game endp
+;----------------------------------------
+gameoverscreen proc
+lea esi,Gameovertext
+mov  eax,white+(black*16)
+call SetTextColor
+mov dh,0
+    outerloop:
+        mov dl,0
+        innerloop:
+             call gotoxy
+             mov al,[esi]
+             call writechar
+             inc esi
+             inc dl
+             cmp dl,30
+             jnz innerLoop
+        inc dh
+        cmp dh,22
+        jnz outerLoop
+ret
+gameoverscreen endp
+;----------------------------------------
+main proc
+mov continueGame,1
+call game
+call clrscr
+;call gameoverscreen
+call readdec
 exit
 main endp
 ;----------------------------------------
