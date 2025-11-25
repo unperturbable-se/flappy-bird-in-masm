@@ -1,18 +1,21 @@
 INCLUDE Irvine32.inc
 .data
-windowwidth equ 80
+windowwidth equ 50
 windowheight equ 50
 platformdelay equ 10
-platformWidth equ 2
+platformWidth equ 4
 holeheight    equ 15
 birdposx      equ windowwidth/2
 birdposy      byte windowheight/2
 maxbirdposy   byte windowheight/2+8
 time          dword 0
 score         dword 0
+highScore     dword 0
 jumpheight    equ 7
 continueGame  byte 1
-
+backgroundColour dword blue+(black*16)
+platformColour   dword green+(black*16)
+birdColour       dword yellow+(black*16)
 
 ;velocity      equ 1
 ;acceleration  equ 0
@@ -62,13 +65,35 @@ BYTE "|_____||_____||_____||_____|  "
 BYTE "                              "   
                                   
 ScoreText byte "Current Score:",0
-HighScoreText byte "High Score:" ,0                             
+HighScoreText byte "High Score:" ,0  
+
+startPrompt1 byte "Flappy Bird",0
+startPrompt2 byte "--------------",0
+startPrompt3 byte "1.Start Game",0
+startPrompt4 byte "2.Instructions",0
+startPrompt5 byte "3.Exit Game",0
+startPrompt6 byte "--------------",0
+istr1 byte "How To Play",0
+istr2 byte "1.Press W to jump",0
+istr3 byte "2.Press A or D to choose between birds",0
+istr4 byte "3.Press 1,2,3 or 4 to choose themes",0
+istr5 byte "Good luck!",0
+istr6 byte "-------------------------------",0
+
+endstr1 byte "Options:",0
+endstr2 byte "1.Exit to main menu",0
+endstr3 byte "2.Leave Game",0
+endstr4 byte "------------------",0
+
+filename byte "highscore.txt",0
+filehandle dword ?
+fileBuffer byte 100 dup(0)
 
 .code
 ;--------------------------------------
     displayBackground proc ;runs only once
     call clrscr 
-    mov  eax,yellow+(black*16)
+    mov  eax,backgroundColour
     call SetTextColor
     mov dh,0
     OuterLoop:
@@ -88,7 +113,7 @@ HighScoreText byte "High Score:" ,0
 ;--------------------------------------
 movePlatform proc uses eax ;takes dl as input, takes bh,bl as input(hole height is between bl,bh)
 ;adds speed number of columns, removes speed number of columns(future addition)
-mov  eax,green+(black*16)
+mov  eax,platformColour
 call SetTextColor
     mov dh,0
     addcolumn:
@@ -106,7 +131,7 @@ call SetTextColor
          cmp dh,windowheight
          jnz addcolumn
 
-mov  eax,yellow+(black*16)
+mov  eax,backgroundColour
 call SetTextColor  
     mov dh,0
     add dl,platformWidth+1
@@ -126,7 +151,7 @@ ret
 movePlatform endp
 ;--------------------------------------
 addplatform proc uses edx;parameter dl(x coordinate), bl-bh is y-range of hole
-mov  eax,green+(black*16)
+mov  eax,platformColour
 call SetTextColor
 push ecx
 mov cl,0 
@@ -155,7 +180,7 @@ ret
 addplatform endp
 ;--------------------------------------
 removeplatform proc ;parameter dl(x coordinate)
-mov  eax,yellow+(black*16)
+mov  eax,backgroundColour
 call SetTextColor
 mov dl,0 
 outerLoop:
@@ -187,7 +212,7 @@ ret
 randomizehole endp
 ;--------------------------------------
 addbird proc uses edx ecx
-mov  eax,blue+(black*16)
+mov  eax,birdColour
 call SetTextColor
 mov ecx,0 ;index
 mov dh,birdposy
@@ -211,7 +236,7 @@ ret
 addbird endp
 ;--------------------------------------
 removebird proc uses edx ecx
-mov  eax,yellow+(black*16)
+mov  eax,backgroundColour
 call SetTextColor
 mov ecx,0 ;index
 mov dh,birdposy
@@ -258,13 +283,48 @@ cmp al,'w'
 jz up
 cmp al,'W'
 jz up
-jmp return
+jmp checkNums
 up:
      call removebird
      sub birdposy,jumpheight
      sub maxbirdposy,jumpheight
 
 return: ret
+;----------------------------------------------
+checkNums:
+cmp al,'1'
+jz theme1
+cmp al,'2'
+jz theme2
+cmp al,'3'
+jz theme3
+cmp al,'4'
+jz theme4
+jmp return
+
+theme1:
+       mov backgroundColour,blue+(black*16)
+       mov birdColour,white+(black*16)
+       mov platformColour,green+(black*16)
+       jmp changetheme
+theme2:
+       mov backgroundColour,black+(black*16)
+       mov birdColour,white+(black*16)
+       mov platformColour,green+(black*16)
+       jmp changetheme
+theme3:
+       mov backgroundColour,white+(black*16)
+       mov birdColour,green+(black*16)
+       mov platformColour,cyan+(black*16)
+       jmp changetheme
+theme4:
+       mov backgroundColour,red+(black*16)
+       mov birdColour,green+(black*16)
+       mov platformColour,brown+(black*16)
+changetheme:
+       call removebird
+       call addbird
+       ret
 getkey endp
 ;--------------------------------------
 falldown proc uses eax ;velocity=1/4*time
@@ -310,7 +370,7 @@ mov dh,2
 mov dl,windowwidth+20
 call gotoxy
 lea edx,HighScoreText
-mov eax,score
+mov eax,highScore
 call writestring
 call writedec
 ret
@@ -364,16 +424,177 @@ mov dh,0
         inc dh
         cmp dh,22
         jnz outerLoop
+        call readchar
 ret
 gameoverscreen endp
 ;----------------------------------------
-main proc
-mov continueGame,1
-call game
-call clrscr
-call gameoverscreen
-call readchar
 
+startScreen proc
+start:
+     lea edx,startPrompt1
+     call writestring
+     call crlf
+     lea edx,startPrompt2
+     call writestring
+     call crlf
+     lea edx,startPrompt3
+     call writestring
+     call crlf
+     lea edx,startPrompt4
+     call writestring
+     call crlf
+     lea edx,startPrompt5
+     call writestring
+     call crlf
+     lea edx,startPrompt6
+     call writestring
+     call crlf
+     call readchar
+     cmp al,'1'
+     jz startGame
+     cmp al,'2'
+     jz instructions
+     cmp al,'3'
+     jz endGame
+     call clrscr
+     jmp start
+startGame:
+     ret
+instructions:  
+     call clrscr
+     call crlf 
+     lea edx,istr1
+     call writestring
+     call crlf
+     lea edx,istr2
+     call writestring
+     call crlf
+     lea edx,istr2
+     call writestring
+     call crlf
+     lea edx,istr3
+     call writestring
+     call crlf
+     lea edx,istr4
+     call writestring
+     call crlf
+     lea edx,istr5
+     call writestring
+     call crlf
+     lea edx,istr6
+     call writestring
+     call crlf
+     call readchar
+     call clrscr
+     jmp start
+endgame:
+     call clrscr
+     exit
+startScreen endp
+
+;----------------------------------------
+endscreen proc
+again:
+lea edx,endstr1
+call writestring
+call crlf
+lea edx,endstr2
+call writestring
+call crlf
+lea edx,endstr3
+call writestring
+call crlf
+lea edx,endstr4
+call writestring
+call crlf
+call readchar
+cmp al,'1'
+jz restart
+cmp al,'2'
+jz  quitgame
+call clrscr
+jmp again
+quitgame:exit
+restart:ret
+endscreen endp
+;----------------------------------------
+inttostr proc
+    lea esi,[filebuffer]
+    mov eax,highscore
+    mov ecx,0
+storedigits:
+    cmp eax,0
+    jz createstring
+    mov edx,0
+    mov ebx,10
+    div ebx
+    add dl,'0'
+    push edx
+    inc ecx
+    jmp storedigits
+createstring:
+    cmp ecx,0
+    jz  return
+    pop edx
+    mov [esi],dl
+    inc esi
+    dec ecx
+    jmp createstring
+return:
+    mov byte ptr [esi],0
+    ret
+inttostr endp
+;----------------------------------------
+setHighScore proc
+mov eax,score
+cmp eax,highScore
+jge newHighScore
+ret
+newHighScore: 
+mov highScore,eax
+call inttostr
+lea edx,filename
+call createoutputfile
+mov filehandle,eax
+lea edx,fileBuffer
+call strlength
+mov ecx,eax
+mov eax,filehandle
+call writetofile
+mov eax,filehandle
+call closefile
+ret
+setHighScore endp
+;----------------------------------------
+getfromfile proc
+mov edx,offset filename
+call openinputfile
+mov filehandle,eax
+lea edx,fileBuffer
+mov ecx,100
+call readFromFile 
+call closefile
+lea edx,fileBuffer
+call strlength
+mov ecx,eax
+call parsedecimal32
+mov highscore,eax
+ret
+getfromfile endp
+;----------------------------------------
+main proc
+call getfromfile
+start:
+      call clrscr
+      call startScreen
+      call setHighScore
+      mov continueGame,1
+      call game
+      call clrscr
+      call gameoverscreen
+      call clrscr
+      call EndScreen
+jmp start
 exit
 main endp
 ;----------------------------------------
