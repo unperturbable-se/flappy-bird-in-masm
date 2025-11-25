@@ -61,7 +61,8 @@ BYTE "|     ||     ||     ||     |  "
 BYTE "|_____||_____||_____||_____|  "   
 BYTE "                              "   
                                   
-                                
+ScoreText byte "Current Score:",0
+HighScoreText byte "High Score:" ,0                             
 
 .code
 ;--------------------------------------
@@ -298,10 +299,21 @@ showScore proc uses edx eax
 mov  eax,white+(black*16)
 call SetTextColor
 mov dh,0
-mov dl,windowwidth-10
+mov dl,windowwidth+20
 call gotoxy
+lea edx,ScoreText
 mov eax,score
+call writestring
 call writedec
+
+mov dh,2
+mov dl,windowwidth+20
+call gotoxy
+lea edx,HighScoreText
+mov eax,score
+call writestring
+call writedec
+ret
 showScore endp
 ;--------------------------------------
 game proc
@@ -310,7 +322,7 @@ call displayBackground
 call addbird
 outerloop:
     call randomizehole
-    ;call showScore
+    call showScore
     mov dl,windowwidth-platformWidth-1
     call addplatform
     mov dl,windowwidth-platformWidth-1
@@ -359,8 +371,9 @@ main proc
 mov continueGame,1
 call game
 call clrscr
-;call gameoverscreen
-call readdec
+call gameoverscreen
+call readchar
+
 exit
 main endp
 ;----------------------------------------
