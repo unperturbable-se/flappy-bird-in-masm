@@ -1,18 +1,18 @@
 INCLUDE Irvine32.inc
 .data
-windowwidth equ 50
-windowheight equ 50
-platformdelay equ 10
-platformWidth equ 4
-holeheight    equ 15
-birdposx      equ windowwidth/2
-birdposy      byte windowheight/2
-maxbirdposy   byte windowheight/2+8
-time          dword 0
-score         dword 0
-highScore     dword 0
-jumpheight    equ 7
-continueGame  byte 1
+windowwidth      equ 70
+windowheight     equ 70
+platformdelay    equ 20
+platformWidth    equ 4
+holeheight       equ 15
+birdposx         equ windowwidth/2
+birdposy         byte windowheight/2+8
+maxbirdposy      byte windowheight/2+16
+time             dword 0
+score            dword 0
+highScore        dword 0
+jumpheight       equ 7
+continueGame     byte 1
 backgroundColour dword blue+(black*16)
 platformColour   dword green+(black*16)
 birdColour       dword yellow+(black*16)
@@ -377,6 +377,9 @@ ret
 showScore endp
 ;--------------------------------------
 game proc
+mov birdposy,windowheight/2
+mov maxbirdposy,windowheight/2+8
+mov score,0
 lea esi,airplane ;set character
 call displayBackground
 call addbird
@@ -464,9 +467,6 @@ instructions:
      call clrscr
      call crlf 
      lea edx,istr1
-     call writestring
-     call crlf
-     lea edx,istr2
      call writestring
      call crlf
      lea edx,istr2
