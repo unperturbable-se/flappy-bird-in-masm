@@ -2,7 +2,7 @@ INCLUDE Irvine32.inc
 .data
 windowwidth      equ 70
 windowheight     equ 70
-platformdelay    equ 20
+platformdelay    equ 10
 platformWidth    equ 4
 holeheight       equ 15
 birdposx         equ windowwidth/2
@@ -88,6 +88,15 @@ endstr4 byte "------------------",0
 filename byte "highscore.txt",0
 filehandle dword ?
 fileBuffer byte 100 dup(0)
+
+comment1 byte "Hey! your rocking     ",0
+comment2 byte "Good Job!             ",0
+comment3 byte "Well Done!            ",0
+comment4 byte "Yeah! lessgo          ",0
+comment5 byte "Good                  ",0
+comment6 byte "nice                  ",0
+comment7 byte "perfect!              ",0
+comment8 byte "yayyyy! you can do it.",0
 
 .code
 ;--------------------------------------
@@ -376,6 +385,50 @@ call writedec
 ret
 showScore endp
 ;--------------------------------------
+addcommentary proc uses eax edx
+mov  eax,cyan+(white*16)
+call SetTextColor
+mov dh,4
+mov dl,windowwidth+20
+call gotoxy
+mov eax,time
+shl al,5
+shr al,5
+cmp al,0
+jz c1
+cmp al,1
+jz c2
+cmp al,2
+jz c3
+cmp al,3
+jz c4
+cmp al,4
+jz c5
+cmp al,5
+jz c6
+cmp al,6
+jz c7
+cmp al,7
+jz c8
+c1: lea edx,comment1
+jmp print
+c2: lea edx,comment2
+jmp print
+c3: lea edx,comment3
+jmp print
+c4: lea edx,comment4
+jmp print
+c5: lea edx,comment5
+jmp print
+c6: lea edx,comment6
+jmp print
+c7: lea edx,comment7
+jmp print
+c8: lea edx,comment8
+print: call writestring
+ret
+addcommentary endp
+;--------------------------------------
 game proc
 mov birdposy,windowheight/2
 mov maxbirdposy,windowheight/2+8
@@ -386,6 +439,7 @@ call addbird
 outerloop:
     call randomizehole
     call showScore
+    call addcommentary
     mov dl,windowwidth-platformWidth-1
     call addplatform
     mov dl,windowwidth-platformWidth-1
@@ -411,8 +465,9 @@ game endp
 ;----------------------------------------
 gameoverscreen proc
 lea esi,Gameovertext
-mov  eax,white+(black*16)
+mov  eax,black+(white*16)
 call SetTextColor
+call clrscr
 mov dh,0
     outerloop:
         mov dl,0
@@ -433,6 +488,9 @@ gameoverscreen endp
 ;----------------------------------------
 
 startScreen proc
+mov  eax,black+(white*16)
+call SetTextColor
+call clrscr
 start:
      lea edx,startPrompt1
      call writestring
@@ -494,6 +552,9 @@ startScreen endp
 
 ;----------------------------------------
 endscreen proc
+mov  eax,black+(white*16)
+call SetTextColor
+call clrscr
 again:
 lea edx,endstr1
 call writestring
