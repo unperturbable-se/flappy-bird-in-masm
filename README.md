@@ -1,9 +1,10 @@
-# 🚀 Completed Flappy Bird in MASM (Irvine32)
+<img src="screenshots/bird_1.png" width="80" align="center"/>
+
+# Flappy Bird in MASM (Irvine32)
 
 A classic **Flappy Bird–style game** implemented in **x86 Assembly** using **MASM** and the **Irvine32 library**.
 
 ---
-
 ## 🛠️ Installation and Setup
 
 The game is **complete**. You have two options for installation:
@@ -16,7 +17,7 @@ The game is **complete**. You have two options for installation:
     * Download the entire project containing the **`.asm` source file**.
     * Ensure you have the **Irvine32 Library** installed and configured (specifically `Irvine32.inc` and `Irvine32.lib`).
     * Assemble and link the project using MASM (e.g., in a Visual Studio environment configured for Assembly).
-    * Download the required **`highscore.txt`** file(if not already present) and place it in the same directory as the resulting executable.
+    * Download the required **`highscore.txt`** file (if not already present) and place it in the same directory as the resulting executable.
 
 ---
 
@@ -56,10 +57,28 @@ The completed game includes the following functionalities:
 
 ### **Background Themes**
 
-| Theme 1 | Theme 2 | Theme 3 | Theme 4 |
-| ![1](screenshots/bg_1.png) | ![2](screenshots/bg_2.png) | ![3](screenshots/bg_3.png) |![4](screenshots/bg_4.png)| 
+<table>
+  <tr>
+    <td><img src="screenshots/bg_1.png" width="150"></td>
+    <td><img src="screenshots/bg_2.png" width="150"></td>
+    <td><img src="screenshots/bg_3.png" width="150"></td>
+    <td><img src="screenshots/bg_4.png" width="150"></td>
+  </tr>
+</table>
 
 ### **Bird Characters**
 
-| Bird 1 | Bird 2 |
-| ![1](screenshots/bird_1.png) | ![2](screenshots/bird_2.png) |
+<table>
+  <tr>
+    <td><img src="screenshots/bird_1.png" width="120"></td>
+    <td><img src="screenshots/bird_2.png" width="120"></td>
+  </tr>
+</table>
+
+---
+
+## 🎥 Demo
+
+[▶️ Watch on YouTube](https://youtu.be/CA2Ox4oAmrY)
+
+---
