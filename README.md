@@ -1,5 +1,3 @@
-Here is the edited `README.md` file for your completed Flappy Bird game.
-
 # 🚀 Completed Flappy Bird in MASM (Irvine32)
 
 A classic **Flappy Bird–style game** implemented in **x86 Assembly** using **MASM** and the **Irvine32 library**.
