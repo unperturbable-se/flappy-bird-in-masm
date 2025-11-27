@@ -4,7 +4,7 @@ windowwidth      equ 70
 windowheight     equ 70
 platformdelay    equ 10
 platformWidth    equ 4
-holeheight       equ 15
+holeheight       equ 18
 birdposx         equ windowwidth/2
 birdposy         byte windowheight/2+8
 maxbirdposy      byte windowheight/2+16
@@ -97,6 +97,12 @@ comment5 byte "Good                  ",0
 comment6 byte "nice                  ",0
 comment7 byte "perfect!              ",0
 comment8 byte "yayyyy! you can do it.",0
+
+
+beforestarting1 byte "before starting the game,please zoom out",0
+beforestarting2 byte "so that the below line is at most 1 inch long(to prevent pixel distortion), Thank you!",0
+beforestarting3 byte "--------------------------",0
+beforestarting4 byte "Press any key to continue...",0
 
 .code
 ;--------------------------------------
@@ -394,8 +400,8 @@ call gotoxy
 mov eax,time
 shl al,5
 shr al,5
-cmp al,0
-jz c1
+;cmp al,0
+;jz c1
 cmp al,1
 jz c2
 cmp al,2
@@ -410,8 +416,8 @@ cmp al,6
 jz c7
 cmp al,7
 jz c8
-c1: lea edx,comment1
-jmp print
+;c1: lea edx,comment1
+;jmp print
 c2: lea edx,comment2
 jmp print
 c3: lea edx,comment3
@@ -643,7 +649,26 @@ mov highscore,eax
 ret
 getfromfile endp
 ;----------------------------------------
+beforeStart proc
+call clrscr
+lea edx,beforestarting1
+call writestring
+call crlf
+lea edx,beforestarting2
+call writestring
+call crlf
+lea edx,beforestarting3
+call writestring
+call crlf
+lea edx,beforestarting4
+call writestring
+call crlf
+call readchar
+ret
+beforeStart endp
+;----------------------------------------
 main proc
+call beforeStart
 call getfromfile
 start:
       call clrscr
